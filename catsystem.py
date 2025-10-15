@@ -22,8 +22,10 @@ def get_favourite_cats(userId):
 
 def get_random_cat():
     r = requests.get('https://api.thecatapi.com/v1/images/search', headers=credentials.headers)
-    
-    return get_json_content_from_response(r)
+    result = get_json_content_from_response(r)
+    if result and len(result) > 0:
+        return result[0]
+    return None
 
 def add_favourite_cat(catId, userId):
     catData = {
@@ -46,23 +48,37 @@ name = 'Daniel'
 
 print('Witaj', name)
 favouriteCats = get_favourite_cats(userId)
-print("Twoje ulubione koty to:", favouriteCats)
-randomCat = get_random_cat()
-print('Wylosowano kota: ', randomCat[0]["url"])
-
-addToFavourites = input('Czy chcesz dodać kota do ulubionych? T/N')
-
-if addToFavourites.upper() == 'T':
-    print(add_favourite_cat(randomCat[0]["id"], userId))
+if favouriteCats:
+    print("Twoje ulubione koty to:", favouriteCats)
 else:
-    print('Kot nie został dodany do ulubionych')
+    print("Brak ulubionych kotów")
+
+randomCat = get_random_cat()
+if randomCat:
+    print('Wylosowano kota: ', randomCat["url"])
     
-favouriteCatsById = {
-    favouriteCat['id'] : favouriteCat['image']['url']
-    for favouriteCat in favouriteCats
-}
-print(favouriteCatsById)
+    addToFavourites = input('Czy chcesz dodać kota do ulubionych? T/N: ')
+    newlyAddedCatInfo = {}
 
-favouriteCatId = input('Czy chcesz usunąć kota z ulubionych? Podaj jego ID: ')
+    if addToFavourites.upper() == 'T':
+        resultFromAddingFavouriteCat = add_favourite_cat(randomCat["id"], userId)
+        if resultFromAddingFavouriteCat:
+            newlyAddedCatInfo = {resultFromAddingFavouriteCat['id'] : randomCat["url"]}
+    else:
+        print('Kot nie został dodany do ulubionych')
+        
+    if favouriteCats:
+        favouriteCatsById = {
+            favouriteCat['id'] : favouriteCat['image']['url']
+            for favouriteCat in favouriteCats
+        }
+        favouriteCatsById.update(newlyAddedCatInfo)
+        print(favouriteCatsById)
 
-print(remove_favourite_cat(userId, favouriteCatId))
+        favouriteCatId = input('Czy chcesz usunąć kota z ulubionych? Podaj jego ID (Enter = pomiń): ')
+        if favouriteCatId:
+            print(remove_favourite_cat(userId, favouriteCatId))
+    else:
+        print("Brak kotów do usunięcia")
+else:
+    print("Nie udało się pobrać kota")
