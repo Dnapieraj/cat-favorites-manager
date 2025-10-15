@@ -19,3 +19,4 @@ name = 'Arkadiusz'
 
 print('Witaj', name)
 print("Twoje ulubione koty to:", favouriteCats)
+
